@@ -1,4 +1,4 @@
-package com.lohelohe.plugins.kotlin
+package com.github.bayutb123.kdctojson
 
 import com.intellij.testFramework.TestDataPath
 import com.intellij.testFramework.fixtures.BasePlatformTestCase

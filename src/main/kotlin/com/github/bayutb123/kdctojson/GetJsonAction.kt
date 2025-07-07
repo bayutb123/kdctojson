@@ -1,6 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
-package com.lohelohe.plugins.kotlin
+package com.github.bayutb123.kdctojson
 
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
