@@ -115,8 +115,6 @@ object JSONGenerator {
     }
 
     suspend fun generateJsonWithGemini(apiKey: String, dataClass: KtClass, model: String): String {
-        val ktorClient = HttpClient(CIO)
-
         val prompt = """
             Generate a realistic, sample JSON object based on the following Kotlin data class.
             The JSON should be populated with plausible, diverse, and realistic data from indonesia.
