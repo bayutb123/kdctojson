@@ -55,7 +55,7 @@ class GetJsonAction : AnAction() {
 
         }
 
-        if (apiKey == null && model != UNDEFINED) {
+        if (apiKey == null && model != null && model != UNDEFINED) {
             return
         }
 
