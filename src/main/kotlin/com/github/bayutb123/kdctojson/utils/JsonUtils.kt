@@ -4,7 +4,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 
 /**
- * Format string if it was json for better readability
+ * Format the string if it is valid JSON for improved readability.
  */
 fun String.formatJson(): String {
     return try {
