@@ -145,16 +145,16 @@ object JSONGenerator {
                     ],
                     "generationConfig": {
                       "thinkingConfig": {
-                        "thinkingBudget": -1,
+                        "thinkingBudget": -1
                       },
-                      "responseMimeType": "text/plain",
+                      "responseMimeType": "text/plain"
                     },
                     "tools": [
                       {
                         "googleSearch": {
                         }
-                      },
-                    ],
+                      }
+                    ]
                 }
             """.trimIndent())
         }
