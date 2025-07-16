@@ -7,6 +7,11 @@
     <depends>com.intellij.modules.platform</depends>
     <depends>org.jetbrains.kotlin</depends>
 
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Register a notification group for better user feedback -->
+        <notificationGroup id="kdctojson" displayType="BALLOON"/>
+    </extensions>
+
     <actions>
         <action id="com.github.bayutb123.kdctojson.GetJsonAction"
                 class="com.github.bayutb123.kdctojson.GetJsonAction"
