@@ -5,22 +5,23 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class GeminiResponse(
-    val candidates: List<Candidate>,
-    @SerialName("usageMetadata") val usageMetadata: UsageMetadata? = null // Optional
+    val candidates: List<Candidate>? = null,
+    @SerialName("usageMetadata") val usageMetadata: UsageMetadata? = null,
+    val error: GeminiError? = null
 )
 
 @Serializable
 data class Candidate(
     val content: Content,
-    @SerialName("finishReason") val finishReason: String,
-    val index: Int,
-    @SerialName("groundingMetadata") val groundingMetadata: GroundingMetadata? = null // Optional
+    val finishReason: String? = null,
+    val index: Int? = null,
+    val safetyRatings: List<SafetyRating>? = null
 )
 
 @Serializable
 data class Content(
     val parts: List<Part>,
-    val role: String
+    val role: String? = null
 )
 
 @Serializable
@@ -31,11 +32,19 @@ data class Part(
 @Serializable
 data class UsageMetadata(
     @SerialName("promptTokenCount") val promptTokenCount: Int,
-    @SerialName("candidatesTokenCount") val candidatesTokenCount: Int,
+    @SerialName("candidatesTokenCount") val candidatesTokenCount: Int? = null,
     @SerialName("totalTokenCount") val totalTokenCount: Int
 )
 
 @Serializable
-data class GroundingMetadata(
-    val placeholder: String? = null
+data class SafetyRating(
+    val category: String,
+    val probability: String
+)
+
+@Serializable
+data class GeminiError(
+    val code: Int,
+    val message: String,
+    val status: String? = null
 )

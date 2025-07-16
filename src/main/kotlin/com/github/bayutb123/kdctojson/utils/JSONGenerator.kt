@@ -5,6 +5,7 @@ package com.github.bayutb123.kdctojson.utils
 import com.intellij.openapi.project.Project
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -24,6 +25,13 @@ import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.typeUtil.makeNotNullable
 
 object JSONGenerator {
+     private val client = HttpClient(CIO) {
+        install(HttpTimeout) {
+            requestTimeoutMillis = io.ktor.client.plugins.HttpTimeout.INFINITE_TIMEOUT_MS
+            connectTimeoutMillis = io.ktor.client.plugins.HttpTimeout.INFINITE_TIMEOUT_MS
+            socketTimeoutMillis = io.ktor.client.plugins.HttpTimeout.INFINITE_TIMEOUT_MS
+        }
+    }
     fun generateSampleJson(
         project: Project,
         dataClass: KtClass,
@@ -114,7 +122,7 @@ object JSONGenerator {
         }
     }
 
-    suspend fun generateJsonWithGemini(apiKey: String, dataClass: KtClass, model: String): String {
+    suspend fun generateJsonWithGemini(apiKey: String, dataClassText: String, model: String): String {
         val prompt = """
             Generate a realistic, sample JSON object based on the following Kotlin data class.
             The JSON should be populated with plausible, diverse, and realistic data from indonesia.
@@ -123,40 +131,58 @@ object JSONGenerator {
 
             Data Class Definition:
             ```kotlin
-            ${dataClass.text}
+            $dataClassText
             ```
         """.trimIndent()
 
-        val result = ktorClient.post("https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey") {
+        val responseMimeType = when (model) {
+            "gemma-3-1b-it" -> "text/plain"
+            else -> "application/json"
+        }
+
+        val result = client.post("https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey") {
             contentType(ContentType.Application.Json)
             setBody("""
                 {
                     "contents": [
-                      {
-                        "role": "user",
-                        "parts": [
-                          {
-                            "text": "$prompt"
-                          },
-                        ]
-                      },
+                        {
+                            "role": "user",
+                            "parts": [
+                                {
+                                    "text": "$prompt"
+                                }
+                            ]
+                        }
                     ],
                     "generationConfig": {
-                      "thinkingConfig": {
-                        "thinkingBudget": -1
-                      },
-                      "responseMimeType": "text/plain"
+                        "temperature": 0.7,
+                        "topK": 40,
+                        "topP": 0.95,
+                        "maxOutputTokens": 2048,
+                        "responseMimeType": "$responseMimeType"
                     },
-                    "tools": [
-                      {
-                        "googleSearch": {
+                    "safetySettings": [
+                        {
+                            "category": "HARM_CATEGORY_HARASSMENT",
+                            "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                        },
+                        {
+                            "category": "HARM_CATEGORY_HATE_SPEECH", 
+                            "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                        },
+                        {
+                            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                            "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                        },
+                        {
+                            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+                            "threshold": "BLOCK_MEDIUM_AND_ABOVE"
                         }
-                      }
                     ]
                 }
             """.trimIndent())
         }
 
-        return extractTextFromGeminiResponse(result.bodyAsText()) ?: "Failed to extract Gemini Response"
+        return GeminiUtils.extractTextFromResponse(result.bodyAsText()) ?: "Failed to extract Gemini Response"
     }
 }

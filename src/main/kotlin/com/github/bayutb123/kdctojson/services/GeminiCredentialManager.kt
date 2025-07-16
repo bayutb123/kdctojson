@@ -1,13 +1,22 @@
-package com.github.bayutb123.kdctojson
+package com.github.bayutb123.kdctojson.services
 
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.Credentials
 import com.intellij.ide.passwordSafe.PasswordSafe
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.ui.Messages
 
-object GeminiCredentialManager {
-    private const val SERVICE_NAME = "kdctojson"
-    private const val KEY_NAME = "GEMINI_API_KEY"
+@Service(Service.Level.APP)
+class GeminiCredentialManager {
+    
+    companion object {
+        private const val SERVICE_NAME = "kdctojson"
+        private const val KEY_NAME = "GEMINI_API_KEY"
+        
+        fun getInstance(): GeminiCredentialManager = 
+            ApplicationManager.getApplication().getService(GeminiCredentialManager::class.java)
+    }
 
     private val credentialAttributes = CredentialAttributes(SERVICE_NAME)
 

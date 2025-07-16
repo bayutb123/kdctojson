@@ -1,62 +1,77 @@
 package com.github.bayutb123.kdctojson.utils
 
 import com.github.bayutb123.kdctojson.remote.response.GeminiResponse
-import com.intellij.notification.NotificationType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
 import kotlinx.serialization.json.Json
 
 const val UNDEFINED = "undefined"
 
-/**
- * Parses a JSON string from the Gemini API and extracts the text from the first candidate's first part.
- *
- * @param jsonString The raw JSON string response from the Gemini API.
- * @return The extracted text as a String, or null if parsing fails or the structure is unexpected.
- */
-fun extractTextFromGeminiResponse(jsonString: String): String? {
-    // Configure the JSON parser to be lenient, ignoring unknown keys
-    // which makes the parsing more robust to API changes.
-    val json = Json { ignoreUnknownKeys = true }
+object GeminiUtils {
+    
+    /**
+     * Parses a JSON string from the Gemini API and extracts the text from the first candidate's first part.
+     */
+    fun extractTextFromResponse(jsonString: String): String? {
+        val json = Json { ignoreUnknownKeys = true }
+        
+        return try {
+            val response = json.decodeFromString<GeminiResponse>(jsonString)
+            
+            // Check for API errors first
+            response.error?.let { error ->
+                println("Gemini API Error: ${error.message} (Code: ${error.code})")
+                return null
+            }
+            
+            // Extract text from candidates
+            response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text?.cleanMarkdown()
+        } catch (e: Exception) {
+            println("Error parsing JSON: ${e.message}")
+            println("Raw response: $jsonString")
+            null
+        }
+    }
 
-    return try {
-        // Parse the JSON string into our GeminiResponse data class structure.
-        val response = json.decodeFromString<GeminiResponse>(jsonString)
+    /**
+     * Prompts user to select a Gemini model or use local generation
+     */
+    fun promptModelSelection(project: Project): String? {
+        val availableModels = arrayOf(
+            "gemini-2.5-flash", 
+            "gemini-2.5-pro", 
+            "gemini-2.5-flash-lite-preview-06-17",
+            "learnlm-2.0-flash-experimental",
+            "gemini-2.0-flash-lite",
+            "gemma-3-1b-it"
+        )
+        
+        val selectedModel = Messages.showEditableChooseDialog(
+            "Select model",
+            "Select Gemini API",
+            Messages.getQuestionIcon(),
+            arrayOf("Without Gemini API") + availableModels,
+            "Without Gemini API",
+            null
+        )
 
-        // Navigate through the parsed object to find the desired text.
-        // We use safe calls (?.) to prevent null pointer exceptions if a part of the
-        // structure is missing.
-        response.candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text
-    } catch (e: Exception) {
-        // If any error occurs during parsing (e.g., malformed JSON),
-        // print the error and return null.
-        println("Error parsing JSON: ${e.message}")
-        null
+        return when (selectedModel) {
+            "Without Gemini API" -> null
+            in availableModels -> selectedModel
+            else -> {
+                NotificationUtils.showWarning(project, "$selectedModel is not available")
+                UNDEFINED
+            }
+        }
     }
 }
 
 /**
- * Prompt user to select Gemini model or Without AI
+ * Removes Markdown code fences and trims whitespace
  */
-fun promptSelectModel(project: Project): String? {
-    val models = arrayOf("gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.5-flash-lite-preview-06-17")
-    val model = Messages.showEditableChooseDialog(
-        "Select model",
-        "Select Gemini API",
-        Messages.getQuestionIcon(),
-        arrayOf("Without Gemini API") + models,
-        "Without Gemini API",
-        null
-    )
-
-    if (!models.contains(model)) {
-        if (model != "Without Gemini API") {
-            showNotification(project, "$model is not available", NotificationType.WARNING)
-            return UNDEFINED
-        } else {
-            return null
-        }
-    }
-
-    return model
+fun String.cleanMarkdown(): String {
+    return this
+        .replace("```json", "")
+        .replace("```", "")
+        .trim()
 }
