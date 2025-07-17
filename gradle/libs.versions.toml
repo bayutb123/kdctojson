@@ -2,6 +2,8 @@
 # libraries
 junit = "4.13.2"
 opentest4j = "1.3.0"
+ktor = "3.2.2"
+kotlinSerialization = "1.6.3"
 
 # plugins
 changelog = "2.2.1"
@@ -10,9 +12,13 @@ kotlin = "2.1.20"
 kover = "0.9.1"
 qodana = "2024.3.4"
 
+
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 opentest4j = { group = "org.opentest4j", name = "opentest4j", version.ref = "opentest4j" }
+ktor = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
+ktorCIO = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
+kotlinSerialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinSerialization" }
 
 [plugins]
 changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }
