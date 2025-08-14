@@ -64,7 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## 🚀 Getting Started
+Getting Started
 
 This is the initial release of the Kotlin Data Class to JSON plugin. To get started:
 
@@ -73,11 +73,11 @@ This is the initial release of the Kotlin Data Class to JSON plugin. To get star
 3. **Right-click on a data class** and select "Generate JSON Sample"
 4. **Optionally configure Google Gemini API** for realistic data generation
 
-## 🐛 Known Issues
+Known Issues
 
 - None reported for initial release
 
-## 🔮 Future Plans
+Future Plans
 
 - **Enhanced AI Models**: Support for more AI providers and models
 - **Custom Templates**: User-defined data generation templates
@@ -86,13 +86,11 @@ This is the initial release of the Kotlin Data Class to JSON plugin. To get star
 - **Configuration UI**: Settings panel for customization
 - **More Locales**: Support for additional cultural data beyond Indonesian
 
-## 📞 Support & Feedback
+Support & Feedback
 
 - **Bug Reports**: [GitHub Issues](https://github.com/bayutb123/kdctojson/issues)
 - **Feature Requests**: [GitHub Issues](https://github.com/bayutb123/kdctojson/issues)
 - **Email**: bayutantra28@gmail.com
-
-**Made with ❤️ by [By.U](https://github.com/bayutb123)**
 
 [Unreleased]: https://github.com/bayutb123/kdctojson/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/bayutb123/kdctojson/releases/tag/v1.0.0
