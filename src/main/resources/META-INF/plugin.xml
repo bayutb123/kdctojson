@@ -34,7 +34,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- Register a notification group for user feedback -->
-        <notificationGroup id="kdctojson" displayType="BALLOON" toolWindowId=""/>
+        <notificationGroup id="com.github.bayutb123.kdctojson.notifications" displayType="BALLOON" bundle="messages.KdcToJsonBundle" key="notification.group.title"/>
     </extensions>
 
     <actions>
