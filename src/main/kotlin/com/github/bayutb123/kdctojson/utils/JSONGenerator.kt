@@ -2,6 +2,11 @@
 
 package com.github.bayutb123.kdctojson.utils
 
+import com.github.bayutb123.kdctojson.model.Content
+import com.github.bayutb123.kdctojson.model.GeminiRequestBody
+import com.github.bayutb123.kdctojson.model.GenerationConfig
+import com.github.bayutb123.kdctojson.model.Part
+import com.github.bayutb123.kdctojson.model.SafetySetting
 import com.intellij.openapi.project.Project
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -11,6 +16,8 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlinx.serialization.json.Json // For Json.encodeToString
+import kotlinx.serialization.encodeToString // Extension function on Json
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.ClassKind
@@ -124,65 +131,54 @@ object JSONGenerator {
 
     suspend fun generateJsonWithGemini(apiKey: String, dataClassText: String, model: String): String {
         val prompt = """
-            Generate a realistic, sample JSON object based on the following Kotlin data class.
-            The JSON should be populated with plausible, diverse, and realistic data from indonesia.
-            Do not include any explanations, comments, or markdown code fences in your response.
-            Only output the raw JSON object itself.
+        Generate a realistic, sample JSON object based on the following Kotlin data class.
+        The JSON should be populated with plausible, diverse, and realistic data from indonesia.
+        Do not include any explanations, comments, or markdown code fences in your response.
+        Only output the raw JSON object itself.
 
-            Data Class Definition:
-            ```kotlin
-            $dataClassText
-            ```
-        """.trimIndent()
+        Data Class Definition:
+        ```kotlin
+        $dataClassText
+        ```
+    """.trimIndent()
 
         val responseMimeType = when (model) {
             "gemma-3-1b-it" -> "text/plain"
             else -> "application/json"
         }
 
+        // Create an instance of your data class representing the entire request body
+        val requestBody = GeminiRequestBody(
+            contents = listOf(
+                Content(
+                    role = "user",
+                    parts = listOf(Part(text = prompt)) // The 'prompt' string is correctly handled here
+                )
+            ),
+            generationConfig = GenerationConfig(
+                temperature = 0.7,
+                topK = 40,
+                topP = 0.95,
+                maxOutputTokens = 2048,
+                responseMimeType = responseMimeType
+            ),
+            safetySettings = listOf(
+                SafetySetting(category = "HARM_CATEGORY_HARASSMENT", threshold = "BLOCK_MEDIUM_AND_ABOVE"),
+                SafetySetting(category = "HARM_CATEGORY_HATE_SPEECH", threshold = "BLOCK_MEDIUM_AND_ABOVE"),
+                SafetySetting(category = "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold = "BLOCK_MEDIUM_AND_ABOVE"),
+                SafetySetting(category = "HARM_CATEGORY_DANGEROUS_CONTENT", threshold = "BLOCK_MEDIUM_AND_ABOVE")
+            )
+        )
+
+        // Serialize the data class instance to a JSON string
+        // You can customize Json { ignoreUnknownKeys = true } etc. if needed
+        val jsonString = Json.encodeToString(requestBody)
+
         val result = client.post("https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey") {
             contentType(ContentType.Application.Json)
-            setBody("""
-                {
-                    "contents": [
-                        {
-                            "role": "user",
-                            "parts": [
-                                {
-                                    "text": "$prompt"
-                                }
-                            ]
-                        }
-                    ],
-                    "generationConfig": {
-                        "temperature": 0.7,
-                        "topK": 40,
-                        "topP": 0.95,
-                        "maxOutputTokens": 2048,
-                        "responseMimeType": "$responseMimeType"
-                    },
-                    "safetySettings": [
-                        {
-                            "category": "HARM_CATEGORY_HARASSMENT",
-                            "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-                        },
-                        {
-                            "category": "HARM_CATEGORY_HATE_SPEECH", 
-                            "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-                        },
-                        {
-                            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                            "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-                        },
-                        {
-                            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                            "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-                        }
-                    ]
-                }
-            """.trimIndent())
+            setBody(jsonString) // Set the pre-serialized JSON string here
         }
 
-        return GeminiUtils.extractTextFromResponse(result.bodyAsText()) ?: "Failed to extract Gemini Response"
+        return GeminiUtils.extractTextFromResponse(result.bodyAsText()) ?: "Failed to extract Gemini Response, ${result.bodyAsText()}"
     }
 }
