@@ -16,8 +16,8 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import kotlinx.serialization.json.Json // For Json.encodeToString
-import kotlinx.serialization.encodeToString // Extension function on Json
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.ClassKind
@@ -171,7 +171,7 @@ object JSONGenerator {
         )
 
         // Serialize the data class instance to a JSON string
-        // You can customize Json { ignoreUnknownKeys = true } etc. if needed
+        // You can customize JSON { ignoreUnknownKeys = true } etc. if needed
         val jsonString = Json.encodeToString(requestBody)
 
         val result = client.post("https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey") {
