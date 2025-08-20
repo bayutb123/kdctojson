@@ -1,4 +1,4 @@
-package com.github.bayutb123.kdctojson.model
+package com.github.bayutb123.kdctojson.remote.request
 
 import kotlinx.serialization.Serializable
 

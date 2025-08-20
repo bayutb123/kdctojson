@@ -2,11 +2,11 @@
 
 package com.github.bayutb123.kdctojson.utils
 
-import com.github.bayutb123.kdctojson.model.Content
-import com.github.bayutb123.kdctojson.model.GeminiRequestBody
-import com.github.bayutb123.kdctojson.model.GenerationConfig
-import com.github.bayutb123.kdctojson.model.Part
-import com.github.bayutb123.kdctojson.model.SafetySetting
+import com.github.bayutb123.kdctojson.remote.request.Content
+import com.github.bayutb123.kdctojson.remote.request.GeminiRequestBody
+import com.github.bayutb123.kdctojson.remote.request.GenerationConfig
+import com.github.bayutb123.kdctojson.remote.request.Part
+import com.github.bayutb123.kdctojson.remote.request.SafetySetting
 import com.intellij.openapi.project.Project
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
