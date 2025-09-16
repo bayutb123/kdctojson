@@ -57,7 +57,7 @@ Transform your Kotlin data classes into realistic JSON samples instantly! This p
 
 ### Requirements
 
-- IntelliJ IDEA 2024.2 or later
+- IntelliJ IDEA 2024.2 or later (up to 2025.2.*)
 - Kotlin plugin enabled
 - (Optional) Google Gemini API key for AI-powered generation
 
@@ -112,9 +112,11 @@ To use the AI-powered JSON generation feature, you'll need a Google Gemini API k
    - The key will be securely stored for future use
 
 3. **Supported Models:**
-   - `gemini-1.5-flash` (recommended)
-   - `gemini-1.5-pro`
-   - `gemini-1.0-pro`
+   - `gemini-2.5-flash` (recommended)
+   - `gemini-2.5-pro`
+   - `gemini-2.5-flash-lite-preview-06-17`
+   - `learnlm-2.0-flash-experimental`
+   - `gemini-2.0-flash-lite`
    - `gemma-3-1b-it`
 
 > [!NOTE]
@@ -269,26 +271,41 @@ src/
 
 ## Plugin configuration file
 
-The plugin configuration file is a [plugin.xml][file:plugin.xml] file located in the `src/main/resources/META-INF` directory.
-It provides general information about the plugin, its dependencies, extensions, and listeners.
+The plugin configuration file is a plugin.xml file located in the `src/main/resources/META-INF` directory.
+It provides general information about the plugin, its dependencies, extensions, and actions.
 
 ```xml
 <idea-plugin>
-  <id>org.jetbrains.plugins.template</id>
-  <name>Template</name>
-  <vendor>JetBrains</vendor>
-  
-  <depends>com.intellij.modules.platform</depends>
+    <id>com.github.bayutb123.kdctojson</id>
+    <name>Kotlin Data Class to JSON</name>
+    <vendor email="bayutantra28@gmail.com" url="https://github.com/bayutb123">By.U</vendor>
 
-  <resource-bundle>messages.MyBundle</resource-bundle>
-  
-  <extensions defaultExtensionNs="com.intellij">
-    <toolWindow factoryClass="..." id="..."/>
-  </extensions>
+    <!-- Require IntelliJ IDEA 2024.2+ -->
+    <idea-version since-build="242" until-build="252.*"/>
 
-  <applicationListeners>
-    <listener class="..." topic="..."/>
-  </applicationListeners>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.kotlin</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Register a notification group for user feedback -->
+        <notificationGroup id="com.github.bayutb123.kdctojson.notifications" 
+                          displayType="BALLOON" 
+                          bundle="messages.KdcToJsonBundle" 
+                          key="notification.group.title"/>
+    </extensions>
+
+    <actions>
+        <group id="kdctojson.group" text="KDC to JSON" popup="true">
+            <action id="com.github.bayutb123.kdctojson.GetJsonAction"
+                    class="com.github.bayutb123.kdctojson.GetJsonAction"
+                    text="Generate JSON Sample"
+                    description="Generate realistic JSON sample from Kotlin data class">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt J"/>
+            </action>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </group>
+    </actions>
 </idea-plugin>
 ```
 
@@ -516,5 +533,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Made with ❤️ by [By.U](https://github.com/bayutb123)**
 
 *If you find this plugin helpful, please consider giving it a ⭐ on GitHub!*
-
-
