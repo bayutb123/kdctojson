@@ -91,6 +91,11 @@ class GetJsonAction : AnAction() {
                         CopyPasteManager.getInstance().setContents(StringSelection(jsonResponse))
                         NotificationUtils.showInfo(project, "JSON copied to clipboard!")
                     }
+                } catch (e: GeminiNonOkResponseException) {
+                    ApplicationManager.getApplication().invokeLater {
+                        val snippet = e.responseBody.take(500)
+                        NotificationUtils.showWarning(project, "Gemini request failed (HTTP ${e.statusCode}). Response: $snippet")
+                    }
                 } catch (e: Exception) {
                     ApplicationManager.getApplication().invokeLater {
                         NotificationUtils.showError(project, "Error generating JSON: ${e.message}")

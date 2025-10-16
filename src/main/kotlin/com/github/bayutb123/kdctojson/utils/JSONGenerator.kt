@@ -159,6 +159,12 @@ object JSONGenerator {
             setBody(jsonString)
         }
 
-        return GeminiUtils.extractTextFromResponse(result.bodyAsText()) ?: "Failed to extract Gemini Response, ${result.bodyAsText()}"
+        val statusCode = result.status.value
+        val bodyText = result.bodyAsText()
+        if (statusCode !in 200..299) {
+            throw GeminiNonOkResponseException(statusCode, bodyText)
+        }
+
+        return GeminiUtils.extractTextFromResponse(bodyText) ?: "Failed to extract Gemini Response, $bodyText"
     }
 }
