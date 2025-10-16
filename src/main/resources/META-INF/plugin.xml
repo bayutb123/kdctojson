@@ -1,19 +1,53 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>com.github.bayutb123.kdctojson</id>
-    <name>Get JSON from Data Class</name>
-    <vendor>By.U</vendor>
+    <name>Kotlin Data Class to JSON</name>
+    <vendor email="bayutantra28@gmail.com" url="https://github.com/bayutb123">By.U</vendor>
+    <description><![CDATA[
+        Generate realistic JSON samples from Kotlin data classes with AI-powered content generation.
+        
+        Features:
+        • Generate sample JSON from data classes with realistic data
+        • AI-powered JSON generation using Google Gemini API
+        • Support for nested data classes and collections
+        • Automatic clipboard integration
+        • Indonesian locale-aware sample data
+        
+        Simply right-click on any Kotlin data class and select "Generate JSON Sample" to get started.
+    ]]></description>
+
+    <change-notes><![CDATA[
+        <h3>1.0.0</h3>
+        <ul>
+            <li>Initial release</li>
+            <li>Basic JSON generation from Kotlin data classes</li>
+            <li>Google Gemini API integration</li>
+            <li>Context menu integration</li>
+        </ul>
+    ]]></change-notes>
+
+    <!-- Require IntelliJ IDEA 2024.2+ -->
+    <idea-version since-build="242" until-build="252.*"/>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>org.jetbrains.kotlin</depends>
 
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Register a notification group for user feedback -->
+        <notificationGroup id="com.github.bayutb123.kdctojson.notifications" displayType="BALLOON" bundle="messages.KdcToJsonBundle" key="notification.group.title"/>
+    </extensions>
+
     <actions>
-        <action id="com.github.bayutb123.kdctojson.GetJsonAction"
-                class="com.github.bayutb123.kdctojson.GetJsonAction"
-                text="Get JsonObject"
-                popup="true">
+        <group id="kdctojson.group" text="KDC to JSON" popup="true">
+            <action id="com.github.bayutb123.kdctojson.GetJsonAction"
+                    class="com.github.bayutb123.kdctojson.GetJsonAction"
+                    text="Generate JSON Sample"
+                    description="Generate realistic JSON sample from Kotlin data class">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt J"/>
+            </action>
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
-        </action>
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </group>
     </actions>
 
 </idea-plugin>

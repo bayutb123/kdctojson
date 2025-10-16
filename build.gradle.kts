@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.qodana) // Gradle Qodana Plugin
     alias(libs.plugins.kover) // Gradle Kover Plugin
+    kotlin("plugin.serialization") version libs.versions.kotlin
 }
 
 group = providers.gradleProperty("pluginGroup").get()
@@ -23,6 +24,11 @@ kotlin {
 repositories {
     mavenCentral()
 
+
+    maven {
+        url = uri("https://maven.google.com/")
+    }
+
     // IntelliJ Platform Gradle Plugin Repositories Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-repositories-extension.html
     intellijPlatform {
         defaultRepositories()
@@ -33,6 +39,12 @@ repositories {
 dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.opentest4j)
+
+    implementation(libs.ktor)
+    implementation(libs.ktorCIO)
+
+    // Add Kotlinx Serialization for pretty-printing the JSON response
+    implementation(libs.kotlinSerialization)
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
