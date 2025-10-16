@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned
+- Custom data generation templates
+- Export to file functionality
+- Batch processing for multiple data classes
+
+## [1.0.1] - 2025-10-16
+
 ### Added
 - Support for updated Gemini AI models:
   - `gemini-2.5-flash` (recommended)
@@ -25,11 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Simplify JSON generation by avoiding heavy resolve and using type text fallback
 - Bump plugin version to 1.0.1
 - Show a warning notification and do not copy when Gemini HTTP response is non-200
-
-### Planned
-- Custom data generation templates
-- Export to file functionality
-- Batch processing for multiple data classes
 
 ## [1.0.0] - 2024-12-17
 
@@ -110,5 +112,6 @@ Support & Feedback
 - **Feature Requests**: [GitHub Issues](https://github.com/bayutb123/kdctojson/issues)
 - **Email**: bayutantra28@gmail.com
 
-[Unreleased]: https://github.com/bayutb123/kdctojson/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/bayutb123/kdctojson/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/bayutb123/kdctojson/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/bayutb123/kdctojson/releases/tag/v1.0.0
