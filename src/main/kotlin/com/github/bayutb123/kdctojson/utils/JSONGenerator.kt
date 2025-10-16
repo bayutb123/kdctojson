@@ -16,29 +16,21 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
-import org.jetbrains.kotlin.builtins.KotlinBuiltIns
-import org.jetbrains.kotlin.descriptors.ClassDescriptor
-import org.jetbrains.kotlin.descriptors.ClassKind
-import org.jetbrains.kotlin.idea.caches.resolve.analyze
+import kotlinx.serialization.json.Json
 import org.jetbrains.kotlin.psi.KtCallableDeclaration
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtEnumEntry
-import org.jetbrains.kotlin.resolve.BindingContext
-import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
-import org.jetbrains.kotlin.resolve.source.getPsi
-import org.jetbrains.kotlin.types.KotlinType
-import org.jetbrains.kotlin.types.typeUtil.makeNotNullable
 
 object JSONGenerator {
-     private val client = HttpClient(CIO) {
+    private val client = HttpClient(CIO) {
         install(HttpTimeout) {
-            requestTimeoutMillis = io.ktor.client.plugins.HttpTimeout.INFINITE_TIMEOUT_MS
-            connectTimeoutMillis = io.ktor.client.plugins.HttpTimeout.INFINITE_TIMEOUT_MS
-            socketTimeoutMillis = io.ktor.client.plugins.HttpTimeout.INFINITE_TIMEOUT_MS
+            requestTimeoutMillis = 300_000
+            socketTimeoutMillis = 300_000
+            connectTimeoutMillis = 300_000
         }
     }
+
     fun generateSampleJson(
         project: Project,
         dataClass: KtClass,
@@ -53,15 +45,9 @@ object JSONGenerator {
 
         val jsonFields = allProps.mapNotNull { prop ->
             val name = prop.name ?: return@mapNotNull null
-            val typeReference = prop.typeReference
+            val typeText = prop.typeReference?.text ?: "Any"
 
-            val kotlinType = typeReference?.let {
-                val bindingContext = it.analyze(BodyResolveMode.FULL)
-                bindingContext[BindingContext.TYPE, it]
-            }
-
-            // Delegate the value generation to the recursive helper function
-            val value = generateValueForType(project, kotlinType, indentLevel + 1)
+            val value = generateValueForTypeText(project, dataClass, typeText, indentLevel + 1)
 
             "$fieldIndent\"$name\": $value"
         }.joinToString(",\n")
@@ -69,32 +55,28 @@ object JSONGenerator {
         return "{\n$jsonFields\n$closingBraceIndent}"
     }
 
-    private fun generateValueForType(
+    private fun generateValueForTypeText(
         project: Project,
-        kotlinType: KotlinType?,
+        contextClass: KtClass,
+        rawTypeText: String,
         indentLevel: Int
     ): String {
-        // Base case for unresolved or null types
-        if (kotlinType == null) return "null"
-
-        val nonNullableType = kotlinType.makeNotNullable()
+        val typeText = rawTypeText.trim().removeSuffix("?")
         val closingBracketIndent = " ".repeat(4 * (indentLevel - 1))
 
         return when {
-            KotlinBuiltIns.isString(nonNullableType) -> "\"example\""
-            KotlinBuiltIns.isInt(nonNullableType) -> "0"
-            KotlinBuiltIns.isBoolean(nonNullableType) -> "true"
+            typeText == "String" || typeText == "kotlin.String" -> "\"example\""
+            typeText == "Int" || typeText == "kotlin.Int" -> "0"
+            typeText == "Boolean" || typeText == "kotlin.Boolean" -> "true"
+            typeText == "Long" || typeText == "kotlin.Long" -> "0"
+            typeText == "Double" || typeText == "kotlin.Double" || typeText == "Float" || typeText == "kotlin.Float" -> "0.0"
 
-            // FIX: Handle List<T> by generating 3 elements of type T
-            KotlinBuiltIns.isListOrNullableList(nonNullableType) -> {
-                val genericType = nonNullableType.arguments.firstOrNull()?.type
-                // Recursively generate a sample for the list's element type
-                val sampleElement = generateValueForType(project, genericType, indentLevel)
-
-                // Format the list based on whether the element is a complex object
+            // Handle List<T>
+            typeText.startsWith("List<") || typeText.startsWith("kotlin.collections.List<") -> {
+                val inner = typeText.substringAfter('<').substringBeforeLast('>')
+                val sampleElement = generateValueForTypeText(project, contextClass, inner, indentLevel)
                 val isComplexElement = sampleElement.trimStart().startsWith("{")
                 val elements = List(3) { sampleElement }
-
                 if (isComplexElement) {
                     "[\n" + elements.joinToString(",\n") + "\n$closingBracketIndent]"
                 } else {
@@ -102,30 +84,31 @@ object JSONGenerator {
                 }
             }
 
-            // Fallback for other collection types
-            KotlinBuiltIns.isCollectionOrNullableCollection(nonNullableType) -> "[]"
+            // Other collections → empty array
+            typeText.startsWith("Collection<") || typeText.startsWith("Set<") ||
+                    typeText.startsWith("MutableList<") || typeText.startsWith("MutableSet<") ||
+                    typeText.startsWith("MutableCollection<") ||
+                    typeText.startsWith("kotlin.collections.Collection<") ||
+                    typeText.startsWith("kotlin.collections.Set<") ||
+                    typeText.startsWith("kotlin.collections.MutableList<") ||
+                    typeText.startsWith("kotlin.collections.MutableSet<") ||
+                    typeText.startsWith("kotlin.collections.MutableCollection<") -> "[]"
 
-            nonNullableType.constructor.declarationDescriptor is ClassDescriptor -> {
-                val classDescriptor = nonNullableType.constructor.declarationDescriptor as ClassDescriptor
-                val psiClass = classDescriptor.source.getPsi() as? KtClass
-
+            else -> {
+                // Try to resolve to a class in the same file for data classes/enums
+                val shortName = typeText.substringAfterLast('.')
+                val ktFile = contextClass.containingKtFile
+                val target = ktFile.declarations.filterIsInstance<KtClass>().firstOrNull { it.name == shortName }
                 when {
-                    // If it's a data class, recurse using the main object generator
-                    psiClass != null && psiClass.isData() -> {
-                        generateSampleJson(project, psiClass, indentLevel)
-                    }
-                    // If it's an enum, get the first value
-                    classDescriptor.kind == ClassKind.ENUM_CLASS -> {
-                        val firstEntryName = psiClass?.declarations
-                            ?.filterIsInstance<KtEnumEntry>()
-                            ?.firstOrNull()
-                            ?.name
+                    target == null -> "null"
+                    target.isData() -> generateSampleJson(project, target, indentLevel)
+                    target.isEnum() -> {
+                        val firstEntryName = target.declarations.filterIsInstance<KtEnumEntry>().firstOrNull()?.name
                         firstEntryName?.let { "\"$it\"" } ?: "\"ENUM_VALUE\""
                     }
-                    else -> "null" // Other complex classes
+                    else -> "null"
                 }
             }
-            else -> "null" // Default for unhandled types
         }
     }
 
@@ -147,19 +130,18 @@ object JSONGenerator {
             else -> "application/json"
         }
 
-        // Create an instance of your data class representing the entire request body
         val requestBody = GeminiRequestBody(
             contents = listOf(
                 Content(
                     role = "user",
-                    parts = listOf(Part(text = prompt)) // The 'prompt' string is correctly handled here
+                    parts = listOf(Part(text = prompt))
                 )
             ),
             generationConfig = GenerationConfig(
                 temperature = 0.7,
                 topK = 40,
                 topP = 0.95,
-                maxOutputTokens = 2048,
+                maxOutputTokens = 8192, // increased to better handle larger data classes
                 responseMimeType = responseMimeType
             ),
             safetySettings = listOf(
@@ -170,13 +152,11 @@ object JSONGenerator {
             )
         )
 
-        // Serialize the data class instance to a JSON string
-        // You can customize JSON { ignoreUnknownKeys = true } etc. if needed
         val jsonString = Json.encodeToString(requestBody)
 
         val result = client.post("https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey") {
             contentType(ContentType.Application.Json)
-            setBody(jsonString) // Set the pre-serialized JSON string here
+            setBody(jsonString)
         }
 
         return GeminiUtils.extractTextFromResponse(result.bodyAsText()) ?: "Failed to extract Gemini Response, ${result.bodyAsText()}"
