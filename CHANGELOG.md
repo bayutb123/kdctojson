@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Declare Kotlin K2 compatibility in plugin.xml
 - Improve thread-safety by wrapping PSI reads in ReadAction
 - Simplify JSON generation by avoiding heavy resolve and using type text fallback
+- Bump plugin version to 1.0.1
 
 ### Planned
 - Custom data generation templates
