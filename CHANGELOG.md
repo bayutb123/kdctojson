@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned
+- Custom data generation templates
+- Export to file functionality
+- Batch processing for multiple data classes
+
+## [1.0.1] - 2025-10-16
+
 ### Added
 - Support for updated Gemini AI models:
   - `gemini-2.5-flash` (recommended)
@@ -16,10 +23,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `gemini-2.0-flash-lite`
   - `gemma-3-1b-it`
 
-### Planned
-- Custom data generation templates
-- Export to file functionality
-- Batch processing for multiple data classes
+### Changed
+- Extend Gemini HTTP request timeouts to 5 minutes to support long-running requests
+- Increase Gemini GenerationConfig maxOutputTokens to 8192 for larger data class outputs
+- Bump IntelliJ Platform to 2025.1 and update since-build to 251 for K2-by-default IDEs
+- Declare Kotlin K2 compatibility in plugin.xml
+- Improve thread-safety by wrapping PSI reads in ReadAction
+- Simplify JSON generation by avoiding heavy resolve and using type text fallback
+- Bump plugin version to 1.0.1
+- Show a warning notification and do not copy when Gemini HTTP response is non-200
 
 ## [1.0.0] - 2024-12-17
 
@@ -100,5 +112,6 @@ Support & Feedback
 - **Feature Requests**: [GitHub Issues](https://github.com/bayutb123/kdctojson/issues)
 - **Email**: bayutantra28@gmail.com
 
-[Unreleased]: https://github.com/bayutb123/kdctojson/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/bayutb123/kdctojson/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/bayutb123/kdctojson/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/bayutb123/kdctojson/releases/tag/v1.0.0

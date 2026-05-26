@@ -13,6 +13,7 @@ import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.openapi.application.ReadAction
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlin.psi.KtClass
 import java.awt.datatransfer.StringSelection
@@ -55,18 +56,20 @@ class GetJsonAction : AnAction() {
     }
 
     private fun findDataClassAtCursor(psiFile: com.intellij.psi.PsiFile, editor: com.intellij.openapi.editor.Editor): KtClass? {
-        val offset = editor.caretModel.offset
-        val element = psiFile.findElementAt(offset)
-        val dataClass = PsiTreeUtil.getParentOfType(element, KtClass::class.java, false)
-        return if (dataClass?.isData() == true) dataClass else null
+        return ReadAction.compute<KtClass?, RuntimeException> {
+            val offset = editor.caretModel.offset
+            val element = psiFile.findElementAt(offset)
+            val dataClass = PsiTreeUtil.getParentOfType(element, KtClass::class.java, false)
+            if (dataClass?.isData() == true) dataClass else null
+        }
     }
 
     private fun generateAndCopyJson(project: com.intellij.openapi.project.Project, dataClass: KtClass, model: String?, apiKey: String?) {
         val notifTitle = if (model != null) "Generating JSON with Gemini" else "Generating JSON"
         val indicatorTitle = if (model != null) "Asking Gemini for a JSON sample..." else "Generating sample JSON..."
         
-        // Extract data class text on UI thread (read access required)
-        val dataClassText = dataClass.text
+        // Extract data class text with read access
+        val dataClassText = ReadAction.compute<String, RuntimeException> { dataClass.text }
         
         object : Task.Backgroundable(project, notifTitle, true) {
             override fun run(indicator: ProgressIndicator) {
@@ -78,13 +81,20 @@ class GetJsonAction : AnAction() {
                         if (model != null && apiKey != null) {
                             JSONGenerator.generateJsonWithGemini(apiKey, dataClassText, model)
                         } else {
-                            JSONGenerator.generateSampleJson(project, dataClass)
+                            ReadAction.compute<String, RuntimeException> {
+                                JSONGenerator.generateSampleJson(project, dataClass)
+                            }
                         }
                     }.formatJson()
 
                     ApplicationManager.getApplication().invokeLater {
                         CopyPasteManager.getInstance().setContents(StringSelection(jsonResponse))
                         NotificationUtils.showInfo(project, "JSON copied to clipboard!")
+                    }
+                } catch (e: GeminiNonOkResponseException) {
+                    ApplicationManager.getApplication().invokeLater {
+                        val snippet = e.responseBody.take(500)
+                        NotificationUtils.showWarning(project, "Gemini request failed (HTTP ${e.statusCode}). Response: $snippet")
                     }
                 } catch (e: Exception) {
                     ApplicationManager.getApplication().invokeLater {
